@@ -1,0 +1,31 @@
+ node('master')
+  {
+   def mavenHome = tool name: 'maven3.6.3'
+  stage('1.git clone')
+  {
+  git credentialsId: 'Github-credentials', url: 'https://github.com/kennitho04/maven-web-application'
+  }
+  stage('2.maven-Build')
+  { 
+    sh "${mavenHome}/bin/mvn clean package"
+  }
+  stage('3.CodeQualityReport')
+  {
+  sh "${mavenHome}/bin/mvn sonar:sonar"
+  }
+ stage('4.UploadWarNexus')
+        {
+        //sh "${mavenHome}/bin/mvn clean deploy"
+        }
+ stage('5.DeployTomcat')
+        {
+        deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://52.91.69.184:7000/')], contextPath: null, war: 'target/*.war'
+        }   
+   stage('6.EmailNotification')
+        {
+        emailext body: '''Hello Everyone,
+
+Build from ebay pipeline project.
+''', subject: 'build status', to: 'developers'
+        }   
+  }
